@@ -1,0 +1,131 @@
+# NaviGuard configuration
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Paths
+# ──────────────────────────────────────────────────────────────────────────────
+paths:
+  datasets_root: "data/datasets"          # root folder for downloaded datasets
+  models_dir: "models"                    # trained weight files
+  logs_dir: "logs"
+  output_dir: "output"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Internal class IDs
+# ──────────────────────────────────────────────────────────────────────────────
+class_names:
+  0: vessel_large
+  1: vessel_small
+  2: buoy
+  3: person
+  4: shoreline
+  5: floating_object
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Dataset label mappings  (source label → internal class id)
+# ──────────────────────────────────────────────────────────────────────────────
+label_map:
+  seadronessee:
+    boat: 0
+    large_vehicle: 0
+    vessel: 0
+    ship: 0
+    small_vehicle: 1
+    kayak: 1
+    swimmer: 3
+    buoy: 2
+    marker: 2
+    pier: 4
+    dock: 4
+    shoreline: 4
+    flotsam: 5
+    unknown: 5
+  modd:
+    boat: 1
+    large_boat: 0
+    ship: 0
+    USV: 1
+    buoy: 2
+    obstacle: 5
+    shore: 4
+    horizon: 4
+  tisd:
+    ship: 0
+    vessel: 0
+    boat: 1
+    ferry: 0
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Detector
+# ──────────────────────────────────────────────────────────────────────────────
+detector:
+  rgb:
+    weights: "models/naviguard-yolo-rgb.pt"
+    conf_threshold: 0.30
+    iou_threshold: 0.45
+    img_size: 640
+  thermal:
+    weights: "models/naviguard-yolo-thermal.pt"
+    conf_threshold: 0.25
+    iou_threshold: 0.45
+    img_size: 640
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Tracker  (ByteTrack style parameters)
+# ──────────────────────────────────────────────────────────────────────────────
+tracker:
+  track_thresh: 0.5
+  track_buffer: 30        # frames before a track is deleted
+  match_thresh: 0.8
+  frame_rate: 10
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Camera intrinsics / geometry
+# ──────────────────────────────────────────────────────────────────────────────
+camera:
+  fov_deg: 90.0           # horizontal field-of-view
+  img_width: 1280
+  img_height: 720
+  mount_height_m: 3.0     # camera height above water line
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Fusion / data-association
+# ──────────────────────────────────────────────────────────────────────────────
+fusion:
+  bearing_gate_rad: 0.087   # ≈ 5 °
+  range_gate_m: 200.0
+  track_timeout_s: 15.0
+  history_max_len: 100
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Risk assessment
+# ──────────────────────────────────────────────────────────────────────────────
+risk:
+  critical_distance_m: 100.0
+  critical_time_s: 180.0
+  w_d: 0.6                 # weight for DCPA term
+  w_t: 0.4                 # weight for TCPA term
+  alert_thresholds:
+    yellow: 0.3
+    red: 0.6
+
+# ──────────────────────────────────────────────────────────────────────────────
+# NaviSense connector
+# ──────────────────────────────────────────────────────────────────────────────
+navisense:
+  mode: "disk"             # "disk" | "websocket"
+  disk:
+    frame_dir: "data/navisense/frames"
+    state_file: "data/navisense/own_ship.json"
+    ais_file: "data/navisense/ais_tracks.json"
+  websocket:
+    host: "localhost"
+    port: 8765
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Own ship defaults  (used when no live data)
+# ──────────────────────────────────────────────────────────────────────────────
+own_ship:
+  lat: 51.5
+  lon: -0.09
+  heading_deg: 0.0
+  speed_kn: 5.0
